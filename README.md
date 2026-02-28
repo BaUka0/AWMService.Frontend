@@ -1,7 +1,5 @@
 # 🚀 AWMService Frontend
 
-![AWMService Banner](.github/images/banner.png)
-
 > **AWMService** (Academic Workflow Management Service) is a next-generation platform designed to streamline and automate the entire academic process—from theme selection to the final thesis defense. Built with a focus on efficiency, transparency, and a premium user experience.
 
 ---
