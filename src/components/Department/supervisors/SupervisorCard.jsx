@@ -2,18 +2,17 @@ import React, { useState } from "react";
 import "./SupervisorCard.css";
 
 export function SupervisorCard({ supervisor, onRemove, onUpdateWorkload }) {
-  const loadPercent = Math.min(
-    Math.round((supervisor.currentStudents / supervisor.maxStudents) * 100),
-    100
-  );
+  const currentStudents = supervisor.currentStudents ?? 0;
+  const maxStudents = supervisor.maxStudentsLoad ?? supervisor.maxStudents ?? 5;
+  const loadPercent = maxStudents > 0
+    ? Math.min(Math.round((currentStudents / maxStudents) * 100), 100)
+    : 0;
 
   const loadLevel =
     loadPercent < 60 ? "low" : loadPercent < 85 ? "medium" : "high";
 
   const [isEditingWorkload, setIsEditingWorkload] = useState(false);
-  const [newMaxStudents, setNewMaxStudents] = useState(
-    supervisor.maxStudents
-  );
+  const [newMaxStudents, setNewMaxStudents] = useState(maxStudents);
 
   const handleSaveWorkload = () => {
     onUpdateWorkload(supervisor.id, newMaxStudents);
@@ -21,7 +20,7 @@ export function SupervisorCard({ supervisor, onRemove, onUpdateWorkload }) {
   };
 
   const handleCancelEdit = () => {
-    setNewMaxStudents(supervisor.maxStudents);
+    setNewMaxStudents(maxStudents);
     setIsEditingWorkload(false);
   };
 
@@ -29,10 +28,11 @@ export function SupervisorCard({ supervisor, onRemove, onUpdateWorkload }) {
     <div className="supervisor-card">
       <div className="card-header">
         <div>
-          <h3 className="card-title">{supervisor.name}</h3>
+          <h3 className="card-title">{supervisor.fullName ?? supervisor.name}</h3>
           <p className="card-description">
-            {supervisor.position} • {supervisor.degree} •{" "}
-            {supervisor.specialization}
+            {supervisor.position}
+            {(supervisor.academicDegree ?? supervisor.degree) ? ` • ${supervisor.academicDegree ?? supervisor.degree}` : ''}
+            {supervisor.specialization ? ` • ${supervisor.specialization}` : ''}
           </p>
         </div>
 
@@ -81,17 +81,19 @@ export function SupervisorCard({ supervisor, onRemove, onUpdateWorkload }) {
               <span>{supervisor.email}</span>
             </div>
 
-            <div className="contact-item">
-              <svg viewBox="0 0 24 24">
-                <path d="M22 16.92V21a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2H7a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92Z" />
-              </svg>
-              <span>{supervisor.phone}</span>
-            </div>
+            {supervisor.phone && (
+              <div className="contact-item">
+                <svg viewBox="0 0 24 24">
+                  <path d="M22 16.92V21a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2H7a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92Z" />
+                </svg>
+                <span>{supervisor.phone}</span>
+              </div>
+            )}
           </div>
 
           <div>
             <h4 className="section-title">Нагрузка</h4>
-            <p>Текущие студенты: {supervisor.currentStudents}</p>
+            <p>Текущие студенты: {currentStudents}</p>
 
             {isEditingWorkload ? (
               <div className="edit-workload-input">
@@ -127,7 +129,7 @@ export function SupervisorCard({ supervisor, onRemove, onUpdateWorkload }) {
               </div>
             ) : (
               <div>
-                <p>Максимум: {supervisor.maxStudents}</p>
+                <p>Максимум: {maxStudents}</p>
 
                 <div className="progress-wrapper">
                   <div className="progress-bar">

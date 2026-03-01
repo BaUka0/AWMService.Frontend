@@ -205,7 +205,7 @@
 
 .btn-details-link:hover { color: #2563eb; }
 
-.draft-actions-group {
+.unapproved-actions-group {
     display: flex;
     gap: 12px;
 }

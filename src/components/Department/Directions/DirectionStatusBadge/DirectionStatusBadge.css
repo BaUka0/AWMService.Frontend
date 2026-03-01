@@ -21,6 +21,12 @@
     color: #991b1b;
 }
 
+.badge-revision {
+    background: #fef3c7;
+    color: #78350f;
+    border: 1px solid #fde68a;
+}
+
 .badge-default {
     background: #e5e7eb;
     color: #374151;

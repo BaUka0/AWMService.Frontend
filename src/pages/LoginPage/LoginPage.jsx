@@ -25,7 +25,7 @@ export default function LoginPage() {
                     navigate("/student/choose-theme");
                 } else if (roles.includes("supervisor")) {
                     navigate("/supervisors/my-topics");
-                } else if (roles.includes("department") || roles.includes("secretary") || roles.includes("admin")) {
+                } else if (roles.includes("headofdepartment") || roles.includes("secretary") || roles.includes("admin")) {
                     navigate("/department/supervisors");
                 } else {
                     // Fallback

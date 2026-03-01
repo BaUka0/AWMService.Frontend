@@ -177,6 +177,10 @@
     gap: 12px;
 }
 
+.dm-footer__actions--three {
+    grid-template-columns: 1fr 1fr 1fr;
+}
+
 .dm-btn {
     padding: 12px 20px;
     border-radius: 10px;
@@ -270,6 +274,31 @@
 
 .dm-btn--confirm-reject:hover {
     background: rgba(16, 18, 200, 0.86);
+}
+
+.dm-btn--revision {
+    background: #FEF3C7 !important;
+    color: #78350F !important;
+    border: 1px solid #FDE68A !important;
+}
+
+.dm-btn--revision:hover {
+    background: #FDE68A !important;
+}
+
+.dm-btn--confirm-revision {
+    background: #D97706;
+    color: white;
+}
+
+.dm-btn--confirm-revision:hover {
+    background: #B45309;
+}
+
+.dm-status--revision {
+    background: #FEF3C7;
+    color: #78350F;
+    border: 1px solid #FDE68A;
 }
 
 .dm-btn--ghost {

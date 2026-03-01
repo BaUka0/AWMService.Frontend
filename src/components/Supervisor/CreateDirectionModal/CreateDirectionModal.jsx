@@ -2,12 +2,14 @@ import React, { useState, useEffect } from "react";
 import { X, Globe, AlignLeft, Info } from "lucide-react";
 import "./CreateDirectionModal.css";
 
-export default function CreateDirectionModal({ onClose, onCreate }) {
+export default function CreateDirectionModal({ onClose, onCreate, workTypes = [] }) {
     const [title, setTitle] = useState({ kk: "", ru: "", en: "" });
     const [description, setDescription] = useState({ kk: "", ru: "", en: "" });
+    const [workTypeId, setWorkTypeId] = useState("");
     const [touched, setTouched] = useState({
         title: { kk: false, ru: false, en: false },
-        description: { kk: false, ru: false, en: false }
+        description: { kk: false, ru: false, en: false },
+        workTypeId: false
     });
     const [canSubmit, setCanSubmit] = useState(false);
 
@@ -15,9 +17,10 @@ export default function CreateDirectionModal({ onClose, onCreate }) {
         const valid =
             title.kk.trim() !== "" &&
             title.ru.trim() !== "" &&
-            description.kk.trim() !== "";
+            description.kk.trim() !== "" &&
+            workTypeId !== "";
         setCanSubmit(valid);
-    }, [title, description]);
+    }, [title, description, workTypeId]);
 
     const handleChangeTitle = (lang, value) => setTitle((s) => ({ ...s, [lang]: value }));
     const handleChangeDesc = (lang, value) => setDescription((s) => ({ ...s, [lang]: value }));
@@ -31,6 +34,7 @@ export default function CreateDirectionModal({ onClose, onCreate }) {
         setTouched({
             title: { kk: true, ru: true, en: true },
             description: { kk: true, ru: true, en: true },
+            workTypeId: true
         });
 
         if (!canSubmit) return;
@@ -38,6 +42,7 @@ export default function CreateDirectionModal({ onClose, onCreate }) {
         onCreate({
             title: { kk: title.kk.trim(), ru: title.ru.trim(), en: title.en.trim() },
             description: { kk: description.kk.trim(), ru: description.ru.trim(), en: description.en.trim() },
+            workTypeId: Number(workTypeId)
         });
     };
 
@@ -142,10 +147,34 @@ export default function CreateDirectionModal({ onClose, onCreate }) {
                             </div>
                         </div>
 
+                        {/* Work Type Section */}
+                        <div className="cdm-section">
+                            <div className="cdm-section-label">
+                                <AlignLeft size={16} />
+                                <h3>Тип работы</h3>
+                            </div>
+                            <div className="cdm-input-group">
+                                <div className="cdm-field vertical">
+                                    <select
+                                        className={`cdm-select ${touched.workTypeId && !workTypeId ? "error" : ""}`}
+                                        value={workTypeId}
+                                        onChange={(e) => setWorkTypeId(e.target.value)}
+                                        onBlur={() => setTouched(t => ({ ...t, workTypeId: true }))}
+                                        style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #e2e8f0" }}
+                                    >
+                                        <option value="">Выберите тип работы...</option>
+                                        {workTypes.map(wt => (
+                                            <option key={wt.id} value={wt.id}>{wt.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
                         {!canSubmit && (
                             <div className="cdm-validation-hint">
                                 <Info size={14} />
-                                <span>Заполните название (KK, RU) и описание (KK)</span>
+                                <span>Заполните название (KK, RU), описание (KK) и выберите тип работы</span>
                             </div>
                         )}
                     </div>

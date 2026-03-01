@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
-    Plus, BookText, Calendar, Users, Eye, Edit3, Send, Info, Trash2
+    Plus, BookText, Calendar, Users, Eye, Edit3, Info
 } from "lucide-react";
 import { useAuth } from "../../../context/AuthContext";
 import { topicService } from "../../../api/topicService";
@@ -22,7 +22,14 @@ const getTopicStatus = (topic) => {
     if (topic.isApproved) return "approved";
     if (topic.isPending) return "pending";
     if (topic.isRejected) return "rejected";
-    return "draft";
+    return "unapproved";
+};
+
+const statusLabels = {
+    "approved": "Утверждено",
+    "pending": "На рассмотрении",
+    "rejected": "Отклонено",
+    "unapproved": "Не утверждено"
 };
 
 export default function STopicsPage() {
@@ -45,7 +52,7 @@ export default function STopicsPage() {
                 user.departmentId,
                 user.currentAcademicYearId
             );
-            const myTopics = allTopics.filter(t => t.supervisorId === user.userId);
+            const myTopics = allTopics.filter(t => t.supervisorId === user.staffId);
 
             // Fetch applications for each topic
             const topicsWithApps = await Promise.all(myTopics.map(async (topic) => {
@@ -78,7 +85,7 @@ export default function STopicsPage() {
     const fetchDirections = async () => {
         try {
             const data = await directionService.getBySupervisor(
-                user.userId,
+                user.staffId,
                 user.currentAcademicYearId
             );
             setDirections(data);
@@ -88,7 +95,7 @@ export default function STopicsPage() {
     };
 
     useEffect(() => {
-        if (user?.userId) {
+        if (user?.staffId) {
             fetchTopics();
             fetchDirections();
         }
@@ -99,7 +106,7 @@ export default function STopicsPage() {
         try {
             await topicService.create({
                 departmentId: user.departmentId,
-                supervisorId: user.userId,
+                supervisorId: user.staffId,   // Staff.Id, не User.Id
                 academicYearId: user.currentAcademicYearId,
                 workTypeId: parseInt(topicPayload.workTypeId) || 1, // Используем из модалки
                 directionId: parseInt(topicPayload.directionId),
@@ -113,16 +120,6 @@ export default function STopicsPage() {
             setIsCreateOpen(false);
         } catch (error) {
             console.error("Failed to create topic", error);
-        }
-    };
-
-    /* ===== SEND FOR REVIEW ===== */
-    const handleSendForReview = async (id) => {
-        try {
-            await topicService.submit(id);
-            await fetchTopics();
-        } catch (error) {
-            console.error("Failed to submit topic", error);
         }
     };
 
@@ -257,21 +254,13 @@ export default function STopicsPage() {
                                         <span>Детали</span>
                                     </button>
 
-                                    {status === "draft" && (
+                                    {status === "unapproved" && (
                                         <div className="draft-actions-group">
                                             <button
                                                 className="btn-icon-only"
                                                 onClick={() => openEdit(topic)}
                                             >
                                                 <Edit3 size={16} />
-                                            </button>
-
-                                            <button
-                                                className="btn-send-mini"
-                                                onClick={() => handleSendForReview(topic.id)}
-                                                title="Отправить на рассмотрение"
-                                            >
-                                                <Send size={14} />
                                             </button>
                                         </div>
                                     )}

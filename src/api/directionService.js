@@ -61,5 +61,29 @@ export const directionService = {
     submit: async (id) => {
         const response = await axiosInstance.post(`/directions/${id}/submit`);
         return response.data;
-    }
+    },
+
+    /**
+     * Утвердить направление (кафедра)
+     */
+    approve: async (id) => {
+        const response = await axiosInstance.post(`/directions/${id}/approve`);
+        return response.data;
+    },
+
+    /**
+     * Отклонить направление (кафедра)
+     */
+    reject: async (id, comment) => {
+        const response = await axiosInstance.post(`/directions/${id}/reject`, { comment });
+        return response.data;
+    },
+
+    /**
+     * Отправить направление на доработку (кафедра)
+     */
+    requestRevision: async (id, comment) => {
+        const response = await axiosInstance.post(`/directions/${id}/request-revision`, { comment });
+        return response.data;
+    },
 };

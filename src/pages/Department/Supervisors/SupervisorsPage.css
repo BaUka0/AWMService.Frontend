@@ -173,3 +173,33 @@
     grid-template-columns: 1fr;
     gap: 1.5rem;
 }
+
+.page-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.secondary-button {
+    background-color: #ffffff;
+    color: #374151;
+    border: 1px solid #D1D5DB;
+    font-weight: 400 !important;
+}
+
+.secondary-button:hover {
+    background-color: #F9FAFB;
+}
+
+.secondary-button .button-icon {
+    filter: none;
+}
+
+.supervisor-empty-state {
+    text-align: center;
+    padding: 3rem;
+    border: 2px dashed #D1D5DB;
+    border-radius: 0.5rem;
+    color: #6B7280;
+    font-size: 0.875rem;
+}

@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import "./DirectionModal.css";
 
 const DirectionModal = ({ direction, onClose, onUpdateStatus }) => {
-    const [showRejection, setShowRejection] = useState(false);
-    const [rejectionReason, setRejectionReason] = useState("");
+    const [formType, setFormType] = useState(null); // null | 'reject' | 'revision'
+    const [comment, setComment] = useState("");
     const [language, setLanguage] = useState("ru");
 
     if (!direction) return null;
@@ -11,23 +11,30 @@ const DirectionModal = ({ direction, onClose, onUpdateStatus }) => {
     const isPending = direction.status === "На рассмотрении";
     const isRejected = direction.status === "Отклонено";
 
-    const handleReject = () => {
-        if (!rejectionReason.trim()) {
-            return; // Дополнительная защита
+    const handleSubmitForm = () => {
+        if (!comment.trim()) return;
+        if (formType === 'reject') {
+            onUpdateStatus(direction.id, "Отклонено", comment);
+        } else if (formType === 'revision') {
+            onUpdateStatus(direction.id, "Требует доработки", comment);
         }
-
-        onUpdateStatus(direction.id, "Отклонено", rejectionReason);
         handleClose();
     };
 
     const handleClose = () => {
-        setShowRejection(false);
-        setRejectionReason("");
+        setFormType(null);
+        setComment("");
         onClose();
     };
 
     const getTitle = () => direction.title[language];
     const getDescription = () => direction.description[language];
+
+    const statusClass =
+        isPending ? "dm-status--pending"
+        : isRejected ? "dm-status--rejected"
+        : direction.status === "Требует доработки" ? "dm-status--revision"
+        : "dm-status--approved";
 
     return (
         <div className="dm-overlay" onClick={handleClose}>
@@ -37,15 +44,7 @@ const DirectionModal = ({ direction, onClose, onUpdateStatus }) => {
             >
                 {/* HEADER */}
                 <div className="dm-header">
-                    <div
-                        className={`dm-status ${
-                            isPending
-                                ? "dm-status--pending"
-                                : isRejected
-                                    ? "dm-status--rejected"
-                                    : "dm-status--approved"
-                        }`}
-                    >
+                    <div className={`dm-status ${statusClass}`}>
                         {direction.status}
                     </div>
 
@@ -118,24 +117,26 @@ const DirectionModal = ({ direction, onClose, onUpdateStatus }) => {
                     {/* FOOTER */}
                     <div className="dm-footer">
                         {isPending ? (
-                            !showRejection ? (
-                                <div className="dm-footer__actions">
+                            formType === null ? (
+                                <div className="dm-footer__actions dm-footer__actions--three">
                                     <button
                                         className="dm-btn dm-btn--reject"
-                                        onClick={() =>
-                                            setShowRejection(true)
-                                        }
+                                        onClick={() => setFormType('reject')}
                                     >
                                         Отклонить
                                     </button>
                                     <button
+                                        className="dm-btn dm-btn--revision"
+                                        onClick={() => setFormType('revision')}
+                                    >
+                                        Доработка
+                                    </button>
+                                    <button
                                         className="dm-btn dm-btn--approve"
-                                        onClick={() =>
-                                            onUpdateStatus(
-                                                direction.id,
-                                                "Утверждено"
-                                            )
-                                        }
+                                        onClick={() => {
+                                            onUpdateStatus(direction.id, "Утверждено");
+                                            handleClose();
+                                        }}
                                     >
                                         Утвердить
                                     </button>
@@ -143,33 +144,31 @@ const DirectionModal = ({ direction, onClose, onUpdateStatus }) => {
                             ) : (
                                 <div className="dm-rejection-form">
                                     <h3 className="dm-rejection-form__title">
-                                        Причина отклонения
+                                        {formType === 'reject' ? 'Причина отклонения' : 'Замечания к доработке'}
                                     </h3>
                                     <textarea
                                         className="dm-rejection-form__textarea"
                                         placeholder="Подробно опишите, что нужно исправить..."
-                                        value={rejectionReason}
-                                        onChange={(e) =>
-                                            setRejectionReason(e.target.value)
-                                        }
+                                        value={comment}
+                                        onChange={(e) => setComment(e.target.value)}
                                         autoFocus
                                     />
                                     <div className="dm-rejection-form__buttons">
                                         <button
                                             className="dm-btn dm-btn--ghost"
                                             onClick={() => {
-                                                setShowRejection(false);
-                                                setRejectionReason("");
+                                                setFormType(null);
+                                                setComment("");
                                             }}
                                         >
                                             Отмена
                                         </button>
                                         <button
-                                            className="dm-btn dm-btn--confirm-reject"
-                                            onClick={handleReject}
-                                            disabled={!rejectionReason.trim()}
+                                            className={`dm-btn ${formType === 'reject' ? 'dm-btn--confirm-reject' : 'dm-btn--confirm-revision'}`}
+                                            onClick={handleSubmitForm}
+                                            disabled={!comment.trim()}
                                         >
-                                            Подтвердить отказ
+                                            {formType === 'reject' ? 'Подтвердить отказ' : 'Отправить на доработку'}
                                         </button>
                                     </div>
                                 </div>

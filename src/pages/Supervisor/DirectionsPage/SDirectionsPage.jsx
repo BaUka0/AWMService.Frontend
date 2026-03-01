@@ -5,6 +5,7 @@ import DirectionViewModal from "../../../components/Supervisor/directions/Direct
 import DirectionEditModal from "../../../components/Supervisor/directions/DirectionEditModal";
 import { useAuth } from "../../../context/AuthContext";
 import { directionService } from "../../../api/directionService";
+import { workTypeService } from "../../../api/workTypeService";
 import "./SDirectionsPage.css";
 
 const statusLabels = {
@@ -24,6 +25,7 @@ const getDirectionStatus = (direction) => {
 
 export default function SDirectionsPage() {
     const [directions, setDirections] = useState([]);
+    const [workTypes, setWorkTypes] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const { user } = useAuth(); // Предполагаем, что supervisorId это userId
 
@@ -32,12 +34,17 @@ export default function SDirectionsPage() {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [selectedDirection, setSelectedDirection] = useState(null);
 
-    const fetchDirections = async () => {
+    const fetchDirectionsAndWorkTypes = async () => {
         try {
             setIsLoading(true);
-            // Используем ID из контекста пользователя (подгружаются при логине)
+
+            // Загружаем типы работ
+            const types = await workTypeService.getAll();
+            setWorkTypes(types);
+
+            // Используем staffId (Staff.Id) — это SupervisorId в таблице направлений
             const data = await directionService.getBySupervisor(
-                user.userId,
+                user.staffId,
                 user.currentAcademicYearId
             );
             setDirections(data);
@@ -49,8 +56,8 @@ export default function SDirectionsPage() {
     };
 
     useEffect(() => {
-        if (user?.userId) {
-            fetchDirections();
+        if (user?.staffId) {
+            fetchDirectionsAndWorkTypes();
         }
     }, [user]);
 
@@ -58,14 +65,15 @@ export default function SDirectionsPage() {
         try {
             await directionService.create({
                 departmentId: user.departmentId,
-                supervisorId: user.userId,
+                supervisorId: user.staffId,   // SupervisorId is StaffId on the backend
                 academicYearId: user.currentAcademicYearId,
+                workTypeId: newDirection.workTypeId,
                 titleRu: newDirection.title.ru,
                 titleKz: newDirection.title.kk,
                 titleEn: newDirection.title.en,
                 description: newDirection.description.ru || newDirection.description.kk,
             });
-            await fetchDirections();
+            await fetchDirectionsAndWorkTypes();
         } catch (error) {
             console.error("Failed to create direction", error);
         }
@@ -74,7 +82,7 @@ export default function SDirectionsPage() {
     const handleSendForReview = async (id) => {
         try {
             await directionService.submit(id);
-            await fetchDirections();
+            await fetchDirectionsAndWorkTypes();
         } catch (error) {
             console.error("Failed to submit direction", error);
         }
@@ -182,6 +190,7 @@ export default function SDirectionsPage() {
             {isCreateModalOpen && (
                 <CreateDirectionModal
                     onClose={() => setIsCreateModalOpen(false)}
+                    workTypes={workTypes}
                     onCreate={(payload) => {
                         handleCreateDirection(payload);
                         setIsCreateModalOpen(false);
@@ -212,7 +221,7 @@ export default function SDirectionsPage() {
                                 titleEn: updated.titleEn,
                                 description: updated.description
                             });
-                            await fetchDirections();
+                            await fetchDirectionsAndWorkTypes();
                             setIsEditModalOpen(false);
                             setSelectedDirection(null);
                         } catch (error) {

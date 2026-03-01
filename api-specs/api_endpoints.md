@@ -55,10 +55,10 @@
 | PATCH | api/v{version:apiVersion}/Notifications/read-all | - | - | - | empty / NoContent (204) |
 | GET | api/v{version:apiVersion}/Notifications/unread-count | - | - | - | int / Ok (200) |
 | GET | api/v{version:apiVersion}/departments/{departmentId}/Periods | departmentId: int | academicYearId: int | - | IReadOnlyList<PeriodResponse> / Ok (200) |
-| GET | api/v{version:apiVersion}/departments/{departmentId}/Periods/active | departmentId: int | academicYearId: int; stage: WorkflowStage | - | PeriodResponse / Ok (200) |
+| GET | api/v{version:apiVersion}/departments/{departmentId}/Periods/active | departmentId: int | academicYearId: int; stage: WorkflowStage? | - | PeriodResponse / Ok (200) |
 | POST | api/v{version:apiVersion}/departments/{departmentId}/Periods | departmentId: int | - | CreatePeriodRequest / body | int / CreatedAtAction (201) |
 | PUT | api/v{version:apiVersion}/departments/{departmentId}/Periods/{periodId} | departmentId: int; periodId: int | - | UpdatePeriodRequest / body | empty / NoContent (204) |
-| POST | api/v{version:apiVersion}/departments/{departmentId}/Periods/approve-initial | departmentId: int | academicYearId: int | ApproveInitialPeriodsRequest / body | empty / NoContent (204) |
+| POST | api/v{version:apiVersion}/departments/{departmentId}/Periods/approve-initial | departmentId: int | academicYearId: int | ApproveInitialPeriodsRequest / body (Upsert) | empty / NoContent (204) |
 | GET | api/v{version:apiVersion}/pre-defense/schedule | - | commissionId: int | - | IReadOnlyList<PreDefenseScheduleDto> / Ok (200) |
 | GET | api/v{version:apiVersion}/pre-defense/works/{workId:long}/attempts | workId: long | - | - | IReadOnlyList<PreDefenseAttemptDto> / Ok (200) |
 | POST | api/v{version:apiVersion}/pre-defense/works/{workId:long}/schedule | workId: long | - | SchedulePreDefenseRequest / body | long / CreatedAtAction (201) |
@@ -75,8 +75,10 @@
 | POST | api/v{version:apiVersion}/works/{workId:long}/Reviews/supervisor | workId: long | - | CreateSupervisorReviewRequest / form | long / Ok (200) |
 | POST | api/v{version:apiVersion}/works/{workId:long}/Reviews/external/{reviewId:long} | workId: long; reviewId: long | - | UploadReviewRequest / form | empty / NoContent (204) |
 | GET | api/v{version:apiVersion}/Staff | - | departmentId: int | - | IReadOnlyList<StaffResponse> / Ok (200) |
+| GET | api/v{version:apiVersion}/Staff/supervisors | - | departmentId: int | - | IReadOnlyList<StaffResponse> / Ok (200) |
 | POST | api/v{version:apiVersion}/Staff | - | - | CreateStaffRequest / body | int / CreatedAtAction (201) |
 | PUT | api/v{version:apiVersion}/Staff/{staffId} | staffId: int | - | UpdateStaffRequest / body | empty / NoContent (204) |
+| PATCH | api/v{version:apiVersion}/Staff/{staffId}/workload | staffId: int | - | UpdateStaffWorkloadRequest / body | empty / NoContent (204) |
 | POST | api/v{version:apiVersion}/Staff/approve-supervisors | - | - | ApproveSupervisorsRequest / body | empty / NoContent (204) |
 | GET | api/v{version:apiVersion}/Students/{studentId} | studentId: int | - | - | StudentResponse / Ok (200) |
 | GET | api/v{version:apiVersion}/Students | - | programId: int | - | IReadOnlyList<StudentResponse> / Ok (200) |
@@ -310,6 +312,9 @@
 - IsSupervisor: bool?
 - DepartmentId: int?
 
+### UpdateStaffWorkloadRequest
+- MaxStudentsLoad: int
+
 ### UpdateStudentRequest
 - ProgramId: int?
 - GroupCode: string?
@@ -485,6 +490,10 @@
 - InstituteName: string?
 - CurrentAcademicYearId: int?
 - CurrentAcademicYearName: string?
+- StaffId: int?
+- Position: string?
+- AcademicDegree: string?
+- IsSupervisor: bool?
 - StudentId: int?
 - GroupCode: string?
 
@@ -510,8 +519,6 @@
 - Email: string
 - Roles: IEnumerable<string>
 - RefreshToken: string
-- DepartmentId: int?
-- CurrentAcademicYearId: int?
 
 ### NotificationListResponse
 - UnreadCount: int

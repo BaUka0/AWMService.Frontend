@@ -36,5 +36,13 @@ export const authService = {
             refreshToken
         });
         return response.data;
+    },
+
+    /**
+     * Получает полный профиль авторизованного пользователя
+     */
+    getMe: async () => {
+        const response = await axiosInstance.get('/Users/me');
+        return response.data;
     }
 };

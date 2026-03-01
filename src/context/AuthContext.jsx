@@ -37,36 +37,39 @@ export const AuthProvider = ({ children }) => {
         try {
             const data = await authService.login(loginName, password);
 
-            // data format according to Swagger:
-            // { token: string, login: string, userId: int, email: string, roles: ["string"] }
-
             const newToken = data.token;
-            const newRefreshToken = data.refreshToken; // Добавлено получение refreshToken
+            const newRefreshToken = data.refreshToken;
 
-            // Убираем токен из объекта user перед сохранением
-            const userData = {
-                login: data.login,
-                userId: data.userId,
-                email: data.email,
-                roles: data.roles || [],
-                departmentId: data.departmentId,
-                currentAcademicYearId: data.currentAcademicYearId
-            };
-
-            setToken(newToken);
-            setUser(userData);
-            setIsAuthenticated(true);
-
+            // Сначала сохраняем токены, чтобы axiosInstance мог их использовать
             localStorage.setItem('token', newToken);
             if (newRefreshToken) {
                 localStorage.setItem('refreshToken', newRefreshToken);
             }
+            setToken(newToken); // Обновляем state сразу, чтобы axiosConfig (если он зависит от state/storage) мог подхватить
+
+            // Сразу после логина запрашиваем полный профиль
+            const profile = await authService.getMe();
+
+            // Собираем полный объект пользователя
+            const userData = {
+                login: profile.login,
+                userId: profile.userId,
+                email: profile.email,
+                roles: profile.roles || [], // Или data.roles, но profile.roles надежнее
+                departmentId: profile.departmentId,
+                currentAcademicYearId: profile.currentAcademicYearId,
+                staffId: profile.staffId,      // Staff.Id
+                studentId: profile.studentId,  // Student.Id (если есть)
+            };
+
+            setUser(userData);
+            setIsAuthenticated(true);
             localStorage.setItem('user', JSON.stringify(userData));
 
             return userData;
         } catch (error) {
             console.error("Login Error:", error);
-            throw error; // Бросаем ошибку дальше, чтобы обработать её на странице логина
+            throw error;
         } finally {
             setIsLoading(false);
         }
@@ -77,7 +80,7 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
         setIsAuthenticated(false);
         localStorage.removeItem('token');
-        localStorage.removeItem('refreshToken'); // Добавлено удаление
+        localStorage.removeItem('refreshToken');
         localStorage.removeItem('user');
     };
 

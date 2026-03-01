@@ -61,9 +61,7 @@
   "userId": 0,
   "email": "string",
   "roles": ["string"],
-  "refreshToken": "string",
-  "departmentId": 0,
-  "currentAcademicYearId": 0
+  "refreshToken": "string"
 }
 ```
 
@@ -86,9 +84,7 @@
   "userId": 0,
   "email": "string",
   "roles": ["string"],
-  "refreshToken": "string",
-  "departmentId": 0,
-  "currentAcademicYearId": 0
+  "refreshToken": "string"
 }
 ```
 
@@ -1005,7 +1001,7 @@
 
 **Параметры запроса (query):**
 - `academicYearId` (int)
-- `stage` (string, optional)
+- `stage` (string, optional) — если передан, вернуть период именно для этого этапа. Если не передан, вернуть любой текущий активный период.
 
 **Возвращаемые данные:** `PeriodResponse`
 
@@ -1047,7 +1043,13 @@
 
 ### POST `/approve-initial`
 
-Утвердить начальные сроки (создание направлений, тем, выбор тем) разом.
+Утвердить начальные сроки (создание направлений, тем, выбор тем) разом. Использует логику **upsert** (обновляет существующие этапы или создает новые).
+
+**Описание:**
+- Метод безопасен для повторного вызова.
+- Если для указанного `workflowStage` период уже существует — будут обновлены даты `startDate`/`endDate`.
+- Если не существует — будет создан новый период.
+- Дубликаты этапов в теле запроса игнорируются (берется первый встреченный).
 
 **Параметры пути:** `departmentId` (int)
 
@@ -1402,6 +1404,15 @@
 ]
 ```
 
+### GET `/supervisors`
+
+Получить список утвержденных научных руководителей кафедры.
+
+**Параметры запроса (query):**
+- `departmentId` (int)
+
+**Возвращаемые данные:** `IReadOnlyList<StaffResponse>` (см. схему StaffResponse)
+
 ### POST `/`
 
 Создать преподавателя.
@@ -1439,9 +1450,29 @@
 
 **Возвращаемые данные:** `204 NoContent`
 
+### PATCH `/{staffId}/workload`
+
+Обновить только лимит нагрузки (количество студентов) преподавателя.
+
+**Параметры пути:** `staffId` (int)
+
+**Входные данные:**
+```json
+{
+  "maxStudentsLoad": 0
+}
+```
+
+**Возвращаемые данные:** `204 NoContent`
+
 ### POST `/approve-supervisors`
 
-Утвердить преподавателей в качестве научных руководителей.
+Утвердить преподавателей в качестве научных руководителей (полная замена состава кафедры).
+
+**Описание:**
+Заменяет весь список научных руководителей кафедры.
+- Для `staffIds` в списке назначается роль "Supervisor".
+- У остальных преподавателей этой кафедры, не вошедших в список, данная роль снимается.
 
 **Входные данные:**
 ```json
@@ -1920,6 +1951,38 @@
 
 ---
 
+## 23. Пользователи (Users)
+
+**Базовый путь:** `api/v1/users`
+
+### GET `/me`
+
+Получить полный профиль авторизованного пользователя.
+
+**Возвращаемые данные:**
+```json
+{
+  "userId": 0,
+  "login": "string",
+  "email": "string",
+  "roles": ["string"],
+  "departmentId": 0,
+  "departmentName": "string",
+  "instituteId": 0,
+  "instituteName": "string",
+  "currentAcademicYearId": 0,
+  "currentAcademicYearName": "string",
+  "staffId": 0,
+  "position": "string",
+  "academicDegree": "string",
+  "isSupervisor": true,
+  "studentId": 0,
+  "groupCode": "string"
+}
+```
+
+---
+
 ## Сводная таблица всех endpoints
 
 | Контроллер | Кол-во endpoints | Основные операции |
@@ -1940,7 +2003,7 @@
 | Protocols | 2 | Протоколы |
 | QualityChecks | 4 | Контроль качества |
 | Reviews | 3 | Рецензии |
-| Staff | 3 | Преподаватели |
+| Staff | 4 | Преподаватели |
 | Students | 4 | Студенты |
 | StudentWorks | 7 | Работы + участники |
 | TopicApplications | 6 | Заявки на темы |
@@ -1948,7 +2011,7 @@
 | WorkTypes | 1 | Словарь типов работ |
 | Users | 1 | Профиль текущего пользователя |
 
-**Итого: ~107 API endpoints**
+**Итого: ~108 API endpoints**
 
 ---
 

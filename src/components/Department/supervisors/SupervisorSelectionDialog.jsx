@@ -13,8 +13,8 @@ export function SupervisorSelectionDialog({
 
   const filteredTeachers = availableTeachers.filter(
     (teacher) =>
-      teacher.name.toLowerCase().includes(searchValue.toLowerCase()) ||
-      teacher.specialization.toLowerCase().includes(searchValue.toLowerCase())
+      (teacher.fullName ?? teacher.name ?? "").toLowerCase().includes(searchValue.toLowerCase()) ||
+      (teacher.position ?? "").toLowerCase().includes(searchValue.toLowerCase())
   );
 
   const toggleTeacher = (teacherId) => {
@@ -82,7 +82,7 @@ export function SupervisorSelectionDialog({
 
             <input
               type="text"
-              placeholder="Поиск по имени или специализации..."
+              placeholder="Поиск по имени или должности..."
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
               className="supervisor-search-input"
