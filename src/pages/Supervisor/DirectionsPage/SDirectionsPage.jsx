@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Plus, BookOpen, Eye, Edit, Send, Calendar, AlertCircle } from "lucide-react";
 import CreateDirectionModal from "../../../components/Supervisor/CreateDirectionModal/CreateDirectionModal";
 import DirectionViewModal from "../../../components/Supervisor/directions/DirectionViewModal";
 import DirectionEditModal from "../../../components/Supervisor/directions/DirectionEditModal";
+import { useAuth } from "../../../context/AuthContext";
+import { directionService } from "../../../api/directionService";
 import "./SDirectionsPage.css";
 
 const statusLabels = {
@@ -12,54 +14,70 @@ const statusLabels = {
     rejected: "Отклонено",
 };
 
+// Helper for mapping DTO properties linearly to our status component
+const getDirectionStatus = (direction) => {
+    if (direction.isApproved) return "approved";
+    if (direction.isPending) return "pending";
+    if (direction.isRejected) return "rejected";
+    return "draft";
+};
+
 export default function SDirectionsPage() {
-    const [directions, setDirections] = useState([
-        {
-            id: "1",
-            title: {
-                kk: "Жасанды интеллект және машиналық оқыту",
-                ru: "Искусственный интеллект и машинное обучение",
-                en: "Artificial Intelligence and Machine Learning",
-            },
-            description: {
-                kk: "Жасанды интеллект алгоритмдерін зерттеу және дамыту",
-                ru: "Исследование и разработка алгоритмов искусственного интеллекта",
-                en: "Research and development of AI algorithms",
-            },
-            status: "approved",
-            createdAt: "2024-01-15T10:00:00Z",
-            approvedAt: "2024-01-20T10:00:00Z",
-        },
-        {
-            id: "2",
-            title: { ru: "Веб-технологии и облачные вычисления" },
-            description: { ru: "Изучение современных веб-технологий и облачных платформ" },
-            status: "rejected",
-            createdAt: "2024-01-20T14:30:00Z",
-            rejectionReason: "Необходимо более детально описать область исследования и добавить конкретные технологии",
-        },
-    ]);
+    const [directions, setDirections] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const { user } = useAuth(); // Предполагаем, что supervisorId это userId
 
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [selectedDirection, setSelectedDirection] = useState(null);
 
-    const handleCreateDirection = (newDirection) => {
-        const dir = {
-            id: Date.now().toString(),
-            title: newDirection.title,
-            description: newDirection.description,
-            status: "draft",
-            createdAt: new Date().toISOString(),
-        };
-        setDirections((prev) => [dir, ...prev]);
+    const fetchDirections = async () => {
+        try {
+            setIsLoading(true);
+            // Используем ID из контекста пользователя (подгружаются при логине)
+            const data = await directionService.getBySupervisor(
+                user.userId,
+                user.currentAcademicYearId
+            );
+            setDirections(data);
+        } catch (error) {
+            console.error("Failed to fetch directions", error);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
-    const handleSendForReview = (id) => {
-        setDirections((prev) =>
-            prev.map((d) => (d.id === id ? { ...d, status: "pending" } : d))
-        );
+    useEffect(() => {
+        if (user?.userId) {
+            fetchDirections();
+        }
+    }, [user]);
+
+    const handleCreateDirection = async (newDirection) => {
+        try {
+            await directionService.create({
+                departmentId: user.departmentId,
+                supervisorId: user.userId,
+                academicYearId: user.currentAcademicYearId,
+                titleRu: newDirection.title.ru,
+                titleKz: newDirection.title.kk,
+                titleEn: newDirection.title.en,
+                description: newDirection.description.ru || newDirection.description.kk,
+            });
+            await fetchDirections();
+        } catch (error) {
+            console.error("Failed to create direction", error);
+        }
+    };
+
+    const handleSendForReview = async (id) => {
+        try {
+            await directionService.submit(id);
+            await fetchDirections();
+        } catch (error) {
+            console.error("Failed to submit direction", error);
+        }
     };
 
     const openView = (direction) => {
@@ -101,60 +119,63 @@ export default function SDirectionsPage() {
                 </div>
             ) : (
                 <div className="directions-grid-layout">
-                    {directions.map((direction) => (
-                        <div key={direction.id} className={`custom-dir-card status-border-${direction.status}`}>
-                            <div className="card-inner-content">
-                                <div className="card-meta-top">
-                                    <span className={`status-badge badge-${direction.status}`}>
-                                        {statusLabels[direction.status]}
-                                    </span>
-                                    <span className="creation-date">
-                                        <Calendar size={13} strokeWidth={2} />
-                                        {new Date(direction.createdAt).toLocaleDateString("ru-RU")}
-                                    </span>
-                                </div>
-
-                                <h3 className="direction-item-title">
-                                    {direction.title.ru ?? direction.title.kk ?? direction.title.en}
-                                </h3>
-                                <p className="direction-item-desc">
-                                    {direction.description.ru ?? direction.description.kk ?? direction.description.en}
-                                </p>
-
-                                {direction.status === "rejected" && (
-                                    <div className="rejection-box">
-                                        <AlertCircle size={14} />
-                                        <span>{direction.rejectionReason}</span>
+                    {directions.map((direction) => {
+                        const status = getDirectionStatus(direction);
+                        return (
+                            <div key={direction.id} className={`custom-dir-card status-border-${status}`}>
+                                <div className="card-inner-content">
+                                    <div className="card-meta-top">
+                                        <span className={`status-badge badge-${status}`}>
+                                            {statusLabels[status]}
+                                        </span>
+                                        <span className="creation-date">
+                                            <Calendar size={13} strokeWidth={2} />
+                                            {new Date(direction.createdAt).toLocaleDateString("ru-RU")}
+                                        </span>
                                     </div>
-                                )}
-                            </div>
 
-                            <div className="card-footer-actions">
-                                <div className="left-actions">
-                                    <button className="minimal-btn" onClick={() => openView(direction)} title="Просмотр">
-                                        <Eye size={18} />
-                                        <span>Детали</span>
-                                    </button>
-                                    {direction.status === "draft" && (
-                                        <button className="minimal-btn" onClick={() => openEdit(direction)} title="Редактировать">
-                                            <Edit size={18} />
-                                            <span>Правка</span>
-                                        </button>
+                                    <h3 className="direction-item-title">
+                                        {direction.titleRu || direction.titleKz || direction.titleEn}
+                                    </h3>
+                                    <p className="direction-item-desc">
+                                        {direction.description}
+                                    </p>
+
+                                    {status === "rejected" && direction.reviewComment && (
+                                        <div className="rejection-box">
+                                            <AlertCircle size={14} />
+                                            <span>{direction.reviewComment}</span>
+                                        </div>
                                     )}
                                 </div>
 
-                                {direction.status === "draft" && (
-                                    <button
-                                        className="send-for-review-btn"
-                                        onClick={() => handleSendForReview(direction.id)}
-                                    >
-                                        <Send size={14} />
-                                        Отправить
-                                    </button>
-                                )}
+                                <div className="card-footer-actions">
+                                    <div className="left-actions">
+                                        <button className="minimal-btn" onClick={() => openView(direction)} title="Просмотр">
+                                            <Eye size={18} />
+                                            <span>Детали</span>
+                                        </button>
+                                        {status === "draft" && (
+                                            <button className="minimal-btn" onClick={() => openEdit(direction)} title="Редактировать">
+                                                <Edit size={18} />
+                                                <span>Правка</span>
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {status === "draft" && (
+                                        <button
+                                            className="send-for-review-btn"
+                                            onClick={() => handleSendForReview(direction.id)}
+                                        >
+                                            <Send size={14} />
+                                            Отправить
+                                        </button>
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        )
+                    })}
                 </div>
             )}
 
@@ -183,10 +204,20 @@ export default function SDirectionsPage() {
                         setIsEditModalOpen(false);
                         setSelectedDirection(null);
                     }}
-                    onSave={(updated) => {
-                        setDirections(prev => prev.map(d => d.id === updated.id ? {...d, ...updated} : d));
-                        setIsEditModalOpen(false);
-                        setSelectedDirection(null);
+                    onSave={async (updated) => {
+                        try {
+                            await directionService.update(updated.id, {
+                                titleRu: updated.titleRu,
+                                titleKz: updated.titleKz,
+                                titleEn: updated.titleEn,
+                                description: updated.description
+                            });
+                            await fetchDirections();
+                            setIsEditModalOpen(false);
+                            setSelectedDirection(null);
+                        } catch (error) {
+                            console.error("Failed to update direction", error);
+                        }
                     }}
                 />
             )}

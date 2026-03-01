@@ -1,43 +1,50 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StudentThemeCard } from '../../components/Students/StudentThemeCard/StudentThemeCard';
+import { topicService } from '../../api/topicService';
+import { applicationService } from '../../api/applicationService';
+import { useAuth } from '../../context/AuthContext';
 import './StudentPage.css';
 
-const initialThemes = [
-    {
-        id: 1,
-        title: "Разработка сайта, продукта, базы данных",
-        description: "Разработка сайта включает в себя проектирование, реализацию и тестирование веб-ресурса...",
-        supervisor: "Иванов И.И",
-        availableSlots: 2,
-        direction: "Машинное обучение",
-        status: 'default',
-    },
-    {
-        id: 2,
-        title: "Анализ больших данных для предсказания оттока клиентов",
-        description: "Исследование и применение моделей машинного обучения для анализа данных и выявления факторов, влияющих на отток клиентов.",
-        supervisor: "Петров А.В.",
-        availableSlots: 1,
-        direction: "Анализ данных",
-        status: 'applied',
-    },
-    {
-        id: 3,
-        title: "Разработка мобильного приложения для фитнес-трекинга",
-        description: "Создание кросс-платформенного мобильного приложения для отслеживания физической активности и питания.",
-        supervisor: "Сидорова М.А.",
-        availableSlots: 0,
-        direction: "Мобильные технологии",
-        status: 'rejected',
-        rejectionReason: "Выбранная тема уже занята другим студентом."
-    }
-];
-
 export default function ChooseThemePage() {
-  const [themes, setThemes] = useState(initialThemes);
+  const { user } = useAuth();
+  const [themes, setThemes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const handleApply = (themeId) => {
-    setThemes(themes.map(t => t.id === themeId ? { ...t, status: 'applied' } : t));
+  useEffect(() => {
+    loadAvailableTopics();
+  }, []);
+
+  const loadAvailableTopics = async () => {
+    setLoading(true);
+    try {
+      const data = await topicService.getAvailable(
+        user?.departmentId,
+        user?.currentAcademicYearId
+      );
+      setThemes(data);
+    } catch (err) {
+      console.error("Ошибка при загрузке доступных тем:", err);
+      setError("Не удалось загрузить темы");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleApply = async (themeId) => {
+    const motivation = prompt("Укажите мотивационное письмо (необязательно):", "");
+    if (motivation === null) return; // User cancelled
+
+    try {
+      await applicationService.create(themeId, motivation);
+      alert("Заявка успешно подана!");
+      // По-хорошему нужно обновить статус темы или убрать её из списка доступных,
+      // либо просто перезагрузить список
+      loadAvailableTopics();
+    } catch (err) {
+      console.error("Ошибка при подаче заявки:", err);
+      alert("Не удалось подать заявку");
+    }
   };
 
   const handleCancel = (themeId) => {
@@ -67,9 +74,9 @@ export default function ChooseThemePage() {
 
       <div className="themes-list-container">
         {themes.map(theme => (
-          <StudentThemeCard 
-            key={theme.id} 
-            theme={theme} 
+          <StudentThemeCard
+            key={theme.id}
+            theme={theme}
             onApply={handleApply}
             onCancel={handleCancel}
             onReapply={handleReapply}

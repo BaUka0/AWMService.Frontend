@@ -15,13 +15,9 @@ export default function DirectionViewModal({ onClose, direction }) {
 
     useEffect(() => {
         if (direction) {
-            if (direction.title?.ru) setTitleTab("ru");
-            else if (direction.title?.kk) setTitleTab("kk");
+            if (direction.titleRu) setTitleTab("ru");
+            else if (direction.titleKz) setTitleTab("kk");
             else setTitleTab("en");
-
-            if (direction.description?.ru) setDescTab("ru");
-            else if (direction.description?.kk) setDescTab("kk");
-            else setDescTab("en");
         }
     }, [direction]);
 
@@ -93,19 +89,15 @@ export default function DirectionViewModal({ onClose, direction }) {
                                 <h3>Название направления</h3>
                             </div>
                             <div className="dvm-tabs-mini">
-                                {['kk', 'ru', 'en'].map((lang) => (
-                                    <button
-                                        key={lang}
-                                        className={`dvm-tab-btn ${titleTab === lang ? "active" : ""}`}
-                                        onClick={() => setTitleTab(lang)}
-                                    >
-                                        {lang.toUpperCase()}
-                                    </button>
-                                ))}
+                                <button className={`dvm-tab-btn ${titleTab === "kk" ? "active" : ""}`} onClick={() => setTitleTab("kk")}>KK</button>
+                                <button className={`dvm-tab-btn ${titleTab === "ru" ? "active" : ""}`} onClick={() => setTitleTab("ru")}>RU</button>
+                                <button className={`dvm-tab-btn ${titleTab === "en" ? "active" : ""}`} onClick={() => setTitleTab("en")}>EN</button>
                             </div>
                         </div>
                         <div className="dvm-text-box">
-                            {direction.title?.[titleTab] || <span className="dvm-no-data">Информация отсутствует</span>}
+                            {titleTab === "kk" && (direction.titleKz || <span className="dvm-no-data">Информация отсутствует</span>)}
+                            {titleTab === "ru" && (direction.titleRu || <span className="dvm-no-data">Информация отсутствует</span>)}
+                            {titleTab === "en" && (direction.titleEn || <span className="dvm-no-data">Информация отсутствует</span>)}
                         </div>
                     </div>
 
@@ -115,20 +107,9 @@ export default function DirectionViewModal({ onClose, direction }) {
                                 <AlignLeft size={18} />
                                 <h3>Подробное описание</h3>
                             </div>
-                            <div className="dvm-tabs-mini">
-                                {['kk', 'ru', 'en'].map((lang) => (
-                                    <button
-                                        key={lang}
-                                        className={`dvm-tab-btn ${descTab === lang ? "active" : ""}`}
-                                        onClick={() => setDescTab(lang)}
-                                    >
-                                        {lang.toUpperCase()}
-                                    </button>
-                                ))}
-                            </div>
                         </div>
                         <div className="dvm-text-box description-area">
-                            {direction.description?.[descTab] || <span className="dvm-no-data">Описание не заполнено</span>}
+                            {direction.description || <span className="dvm-no-data">Описание не заполнено</span>}
                         </div>
                     </div>
                 </div>

@@ -10,7 +10,6 @@ const axiosInstance = axios.create({
     },
 });
 
-// Добавляем перехватчик запросов для установки токена
 axiosInstance.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('token');
@@ -39,7 +38,6 @@ const processQueue = (error, token = null) => {
     failedQueue = [];
 };
 
-// Перехватчик ответов (для глобальной обработки 401 Unauthorized и Refresh Token)
 axiosInstance.interceptors.response.use(
     (response) => {
         return response;
@@ -82,6 +80,15 @@ axiosInstance.interceptors.response.use(
                     if (newRefreshToken) {
                         localStorage.setItem('refreshToken', newRefreshToken);
                     }
+
+                    // Обновляем данные пользователя в localStorage новыми ID (departmentId, academicYearId)
+                    const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+                    const updatedUser = {
+                        ...currentUser,
+                        departmentId: refreshResponse.data.departmentId,
+                        currentAcademicYearId: refreshResponse.data.currentAcademicYearId
+                    };
+                    localStorage.setItem('user', JSON.stringify(updatedUser));
 
                     axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
                     originalRequest.headers.Authorization = `Bearer ${newToken}`;

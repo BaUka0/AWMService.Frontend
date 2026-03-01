@@ -7,26 +7,22 @@ export default function TopicEditModal({ open, onClose, topic, onSave, direction
         titleRu: "",
         titleKk: "",
         titleEn: "",
-        descRu: "",
-        descKk: "",
-        descEn: "",
-        direction: "",
-        workType: "diploma_project",
+        description: "",
+        directionId: "",
+        workTypeId: 2, // Defaulting to 1 based on temporary hardcode
         participantCount: 1,
     });
 
     useEffect(() => {
         if (topic) {
             setForm({
-                titleRu: topic.title?.ru ?? "",
-                titleKk: topic.title?.kk ?? "",
-                titleEn: topic.title?.en ?? "",
-                descRu: topic.description?.ru ?? "",
-                descKk: topic.description?.kk ?? "",
-                descEn: topic.description?.en ?? "",
-                direction: topic.directionTitle ?? "",
-                workType: topic.workType ?? "diploma_project",
-                participantCount: topic.participantCount ?? 1,
+                titleRu: topic.titleRu ?? "",
+                titleKk: topic.titleKk ?? "",
+                titleEn: topic.titleEn ?? "",
+                description: topic.description ?? "",
+                directionId: topic.directionId ?? "",
+                workTypeId: topic.workTypeId ?? 1,
+                participantCount: topic.maxParticipants ?? 1,
             });
         }
     }, [topic]);
@@ -41,19 +37,13 @@ export default function TopicEditModal({ open, onClose, topic, onSave, direction
     const handleSave = () => {
         const updatedTopic = {
             ...topic,
-            title: {
-                ru: form.titleRu,
-                kk: form.titleKk,
-                en: form.titleEn,
-            },
-            description: {
-                ru: form.descRu,
-                kk: form.descKk,
-                en: form.descEn,
-            },
-            directionTitle: form.direction,
-            workType: form.workType,
-            participantCount: Number(form.participantCount),
+            titleRu: form.titleRu,
+            titleKz: form.titleKk,
+            titleEn: form.titleEn,
+            description: form.description,
+            directionId: Number(form.directionId),
+            workTypeId: Number(form.workTypeId),
+            maxParticipants: Number(form.participantCount),
         };
 
         onSave(updatedTopic);
@@ -124,34 +114,11 @@ export default function TopicEditModal({ open, onClose, topic, onSave, direction
                         </div>
                         <div className="tem-input-group">
                             <div className="tem-field vertical">
-                                <div className="tem-lang-tag">KK</div>
                                 <textarea
-                                    name="descKk"
-                                    value={form.descKk}
+                                    name="description"
+                                    value={form.description}
                                     onChange={handleChange}
                                     className="tem-textarea-fixed"
-                                />
-                            </div>
-
-                            <div className="tem-field vertical">
-                                <div className="tem-lang-tag">RU</div>
-                                <textarea
-                                    name="descRu"
-                                    value={form.descRu}
-                                    onChange={handleChange}
-                                    className="tem-textarea-fixed"
-                                />
-                            </div>
-
-                            {/* 🔥 EN DESCRIPTION */}
-                            <div className="tem-field vertical">
-                                <div className="tem-lang-tag">EN</div>
-                                <textarea
-                                    name="descEn"
-                                    value={form.descEn}
-                                    onChange={handleChange}
-                                    className="tem-textarea-fixed"
-
                                 />
                             </div>
                         </div>
@@ -165,14 +132,14 @@ export default function TopicEditModal({ open, onClose, topic, onSave, direction
                                 <h3>Направление</h3>
                             </div>
                             <select
-                                name="direction"
-                                value={form.direction}
+                                name="directionId"
+                                value={form.directionId}
                                 onChange={handleChange}
                                 className="tem-select"
                             >
                                 <option value="">Выберите...</option>
                                 {directions.map((d) => (
-                                    <option key={d} value={d}>{d}</option>
+                                    <option key={d.id} value={d.id}>{d.titleRu || d.titleKz || d.titleEn}</option>
                                 ))}
                             </select>
                         </div>
@@ -183,14 +150,15 @@ export default function TopicEditModal({ open, onClose, topic, onSave, direction
                                 <h3>Тип работы</h3>
                             </div>
                             <select
-                                name="workType"
-                                value={form.workType}
+                                name="workTypeId"
+                                value={form.workTypeId}
                                 onChange={handleChange}
                                 className="tem-select"
                             >
-                                <option value="diploma_project">Дипломный проект</option>
-                                <option value="diploma_work">Дипломная работа</option>
-                                <option value="course_work">Курсовая работа</option>
+                                <option value="0">Курсовая работа</option>
+                                <option value="1">Дипломная работа/Бакалавриат</option>
+                                <option value="2">Магистерская диссертация</option>
+                                <option value="3">Докторская диссертация</option>
                             </select>
                         </div>
 

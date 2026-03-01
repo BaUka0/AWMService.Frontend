@@ -58,6 +58,7 @@
 | GET | api/v{version:apiVersion}/departments/{departmentId}/Periods/active | departmentId: int | academicYearId: int; stage: WorkflowStage | - | PeriodResponse / Ok (200) |
 | POST | api/v{version:apiVersion}/departments/{departmentId}/Periods | departmentId: int | - | CreatePeriodRequest / body | int / CreatedAtAction (201) |
 | PUT | api/v{version:apiVersion}/departments/{departmentId}/Periods/{periodId} | departmentId: int; periodId: int | - | UpdatePeriodRequest / body | empty / NoContent (204) |
+| POST | api/v{version:apiVersion}/departments/{departmentId}/Periods/approve-initial | departmentId: int | academicYearId: int | ApproveInitialPeriodsRequest / body | empty / NoContent (204) |
 | GET | api/v{version:apiVersion}/pre-defense/schedule | - | commissionId: int | - | IReadOnlyList<PreDefenseScheduleDto> / Ok (200) |
 | GET | api/v{version:apiVersion}/pre-defense/works/{workId:long}/attempts | workId: long | - | - | IReadOnlyList<PreDefenseAttemptDto> / Ok (200) |
 | POST | api/v{version:apiVersion}/pre-defense/works/{workId:long}/schedule | workId: long | - | SchedulePreDefenseRequest / body | long / CreatedAtAction (201) |
@@ -76,6 +77,7 @@
 | GET | api/v{version:apiVersion}/Staff | - | departmentId: int | - | IReadOnlyList<StaffResponse> / Ok (200) |
 | POST | api/v{version:apiVersion}/Staff | - | - | CreateStaffRequest / body | int / CreatedAtAction (201) |
 | PUT | api/v{version:apiVersion}/Staff/{staffId} | staffId: int | - | UpdateStaffRequest / body | empty / NoContent (204) |
+| POST | api/v{version:apiVersion}/Staff/approve-supervisors | - | - | ApproveSupervisorsRequest / body | empty / NoContent (204) |
 | GET | api/v{version:apiVersion}/Students/{studentId} | studentId: int | - | - | StudentResponse / Ok (200) |
 | GET | api/v{version:apiVersion}/Students | - | programId: int | - | IReadOnlyList<StudentResponse> / Ok (200) |
 | POST | api/v{version:apiVersion}/Students | - | - | CreateStudentRequest / body | int / CreatedAtAction (201) |
@@ -94,7 +96,9 @@
 | POST | api/v{version:apiVersion}/applications/{applicationId:long}/reject | applicationId: long | - | RejectApplicationRequest / body | empty / NoContent (204) |
 | DELETE | api/v{version:apiVersion}/applications/{applicationId:long} | applicationId: long | - | - | empty / NoContent (204) |
 | GET | api/v{version:apiVersion}/Topics/{id} | id: long | - | - | TopicDetailResponse / Ok (200) |
-| GET | api/v{version:apiVersion}/Topics/available | - | departmentId: int; academicYearId: int | - | IReadOnlyList<TopicResponse> / Ok (200) |
+| GET | api/v{version:apiVersion}/Topics/available | - | departmentId: int?; academicYearId: int? | - | IReadOnlyList<TopicResponse> / Ok (200) |
+| GET | api/v{version:apiVersion}/Users/me | - | - | - | UserProfileResponse / Ok (200) |
+| GET | api/v{version:apiVersion}/WorkTypes | - | - | - | IReadOnlyList<WorkTypeResponse> / Ok (200) |
 | GET | api/v{version:apiVersion}/Topics/by-direction/{directionId} | directionId: long | - | - | IReadOnlyList<TopicResponse> / Ok (200) |
 | POST | api/v{version:apiVersion}/Topics | - | - | CreateTopicRequest / body | long / CreatedAtAction (201) |
 | PUT | api/v{version:apiVersion}/Topics/{id} | id: long | - | UpdateTopicRequest / body | empty / NoContent (204) |
@@ -110,6 +114,13 @@
 ### AddParticipantRequest
 - StudentId: int
 - Role: ParticipantRole
+
+### ApproveInitialPeriodsRequest
+- Periods: IReadOnlyList<PeriodDto>
+
+### ApproveSupervisorsRequest
+- DepartmentId: int
+- StaffIds: IReadOnlyList<int>
 
 ### AssignWorkToSlotRequest
 - WorkId: long
@@ -463,6 +474,25 @@
 - Comment: string?
 - GradedAt: DateTime
 
+### UserProfileResponse
+- UserId: int
+- Login: string
+- Email: string
+- Roles: IReadOnlyList<string>
+- DepartmentId: int?
+- DepartmentName: string?
+- InstituteId: int?
+- InstituteName: string?
+- CurrentAcademicYearId: int?
+- CurrentAcademicYearName: string?
+- StudentId: int?
+- GroupCode: string?
+
+### WorkTypeResponse
+- Id: int
+- Name: string
+- DegreeLevelId: int?
+
 ### InstituteResponse
 - Id: int
 - UniversityId: int
@@ -480,6 +510,8 @@
 - Email: string
 - Roles: IEnumerable<string>
 - RefreshToken: string
+- DepartmentId: int?
+- CurrentAcademicYearId: int?
 
 ### NotificationListResponse
 - UnreadCount: int

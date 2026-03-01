@@ -32,6 +32,8 @@
 19. [Дипломные работы (StudentWorks)](#19-дипломные-работы-studentworks)
 20. [Заявки на темы (TopicApplications)](#20-заявки-на-темы-topicapplications)
 21. [Темы дипломных работ (Topics)](#21-темы-дипломных-работ-topics)
+22. [Типы работ (WorkTypes)](#22-типы-работ-worktypes)
+23. [Пользователи (Users)](#23-пользователи-users)
 
 ---
 
@@ -59,7 +61,9 @@
   "userId": 0,
   "email": "string",
   "roles": ["string"],
-  "refreshToken": "string"
+  "refreshToken": "string",
+  "departmentId": 0,
+  "currentAcademicYearId": 0
 }
 ```
 
@@ -82,7 +86,9 @@
   "userId": 0,
   "email": "string",
   "roles": ["string"],
-  "refreshToken": "string"
+  "refreshToken": "string",
+  "departmentId": 0,
+  "currentAcademicYearId": 0
 }
 ```
 
@@ -1039,6 +1045,30 @@
 
 **Возвращаемые данные:** `204 NoContent`
 
+### POST `/approve-initial`
+
+Утвердить начальные сроки (создание направлений, тем, выбор тем) разом.
+
+**Параметры пути:** `departmentId` (int)
+
+**Параметры запроса (query):**
+- `academicYearId` (int)
+
+**Входные данные:**
+```json
+{
+  "periods": [
+    {
+      "workflowStage": "DirectionSubmission",
+      "startDate": "2024-01-01T00:00:00Z",
+      "endDate": "2024-01-01T00:00:00Z"
+    }
+  ]
+}
+```
+
+**Возвращаемые данные:** `204 NoContent`
+
 ---
 
 ## 13. Предзащиты (PreDefense)
@@ -1409,6 +1439,20 @@
 
 **Возвращаемые данные:** `204 NoContent`
 
+### POST `/approve-supervisors`
+
+Утвердить преподавателей в качестве научных руководителей.
+
+**Входные данные:**
+```json
+{
+  "departmentId": 0,
+  "staffIds": [0]
+}
+```
+
+**Возвращаемые данные:** `204 NoContent`
+
 ---
 
 ## 18. Студенты (Students)
@@ -1726,11 +1770,11 @@
 
 ### GET `/available`
 
-Получить доступные темы.
+Получить доступные темы. Если параметры не указаны, данные подставляются автоматически из контекста текущего пользователя (JWT).
 
 **Параметры запроса (query):**
-- `departmentId` (int)
-- `academicYearId` (int)
+- `departmentId` (int, optional) - ID кафедры. Если не указан, берется из текущей роли пользователя.
+- `academicYearId` (int, optional) - ID учебного года. Если не указан, берется текущий активный год университета.
 
 **Возвращаемые данные:**
 ```json
@@ -1822,6 +1866,60 @@
 
 ---
 
+## 22. Типы работ (WorkTypes)
+
+**Базовый путь:** `api/v1/WorkTypes`
+
+### GET `/`
+
+Получить список всех типов работ (дипломная, магистерская и т.д.). Используется для маппинга ID на названия на фронтенде.
+
+**Возвращаемые данные:**
+```json
+[
+  {
+    "id": 1,
+    "name": "CourseWork",
+    "degreeLevelId": null
+  },
+  {
+    "id": 2,
+    "name": "DiplomaWork",
+    "degreeLevelId": 1
+  }
+]
+```
+
+---
+
+## 23. Пользователи (Users)
+
+**Базовый путь:** `api/v1/Users`
+
+### GET `/me`
+
+Получить профиль текущего пользователя со всеми привязками (кафедра, год, группа).
+
+**Возвращаемые данные:**
+```json
+{
+  "userId": 9,
+  "login": "student1",
+  "email": "student1@test.edu",
+  "roles": ["Student"],
+  "departmentId": 1,
+  "departmentName": "Компьютерные науки",
+  "instituteId": 1,
+  "instituteName": "Институт информационных технологий",
+  "currentAcademicYearId": 1,
+  "currentAcademicYearName": "2025-2026",
+  "studentId": 1,
+  "groupCode": "CS-22-1"
+}
+```
+
+---
+
 ## Сводная таблица всех endpoints
 
 | Контроллер | Кол-во endpoints | Основные операции |
@@ -1847,8 +1945,10 @@
 | StudentWorks | 7 | Работы + участники |
 | TopicApplications | 6 | Заявки на темы |
 | Topics | 7 | Темы + workflow |
+| WorkTypes | 1 | Словарь типов работ |
+| Users | 1 | Профиль текущего пользователя |
 
-**Итого: ~105 API endpoints**
+**Итого: ~107 API endpoints**
 
 ---
 

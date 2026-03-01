@@ -48,7 +48,9 @@ export const AuthProvider = ({ children }) => {
                 login: data.login,
                 userId: data.userId,
                 email: data.email,
-                roles: data.roles || []
+                roles: data.roles || [],
+                departmentId: data.departmentId,
+                currentAcademicYearId: data.currentAcademicYearId
             };
 
             setToken(newToken);

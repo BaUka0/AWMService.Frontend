@@ -16,12 +16,12 @@ const workTypeLabels = {
 };
 
 export default function TopicViewModal({
-                                           open,
-                                           onClose,
-                                           topic,
-                                           onApproveStudent, // Функция: (requestId) => void
-                                           onRejectStudent   // Функция: (requestId, reason) => void
-                                       }) {
+    open,
+    onClose,
+    topic,
+    onApproveStudent, // Функция: (requestId) => void
+    onRejectStudent   // Функция: (requestId, reason) => void
+}) {
     const [titleTab, setTitleTab] = useState("ru");
     const [descTab, setDescTab] = useState("ru");
 
@@ -31,11 +31,8 @@ export default function TopicViewModal({
 
     useEffect(() => {
         if (!topic) return;
-        const availableTitles = topic.title || {};
-        const availableDescriptions = topic.description || {};
 
-        setTitleTab(availableTitles.ru ? "ru" : availableTitles.kk ? "kk" : "en");
-        setDescTab(availableDescriptions.ru ? "ru" : availableDescriptions.kk ? "kk" : "en");
+        setTitleTab(topic.titleRu ? "ru" : topic.titleKz ? "kk" : "en");
 
         // Сброс состояния при открытии новой темы
         setRejectingId(null);
@@ -88,14 +85,28 @@ export default function TopicViewModal({
         handleCancelReject();
     };
 
+    const getTopicStatus = (topic) => {
+        if (topic.isApproved) return "approved";
+        if (topic.isPending) return "pending";
+        if (topic.isRejected) return "rejected";
+        return "draft";
+    };
+
+    const workTypeLabels = {
+        0: "Курсовая работа",
+        1: "Дипломная работа/Бакалавриат",
+        2: "Магистерская диссертация",
+        3: "Докторская диссертация",
+    };
+
     return (
         <div className="tv-overlay" onClick={onClose}>
             <div className="tv-modal" onClick={(e) => e.stopPropagation()}>
                 <div className="tv-header">
                     <div className="tv-header-info">
                         <h2>Детали темы</h2>
-                        <span className={`tv-status-badge st-${topic.status}`}>
-                            {statusLabels[topic.status] || topic.status}
+                        <span className={`tv-status-badge st-${getTopicStatus(topic)}`}>
+                            {statusLabels[getTopicStatus(topic)] || getTopicStatus(topic)}
                         </span>
                     </div>
                     <button className="tv-close-btn" onClick={onClose}>
@@ -110,14 +121,14 @@ export default function TopicViewModal({
                             <Layers size={16} />
                             <div className="tv-info-content">
                                 <label>Тип работы</label>
-                                <span>{workTypeLabels[topic.workType] || topic.workType}</span>
+                                <span>{workTypeLabels[topic.workTypeId] || topic.workTypeId}</span>
                             </div>
                         </div>
                         <div className="tv-info-item">
                             <Users size={16} />
                             <div className="tv-info-content">
                                 <label>Лимит мест</label>
-                                <span>{maxParticipants} чел.</span>
+                                <span>{topic.maxParticipants || 1} чел.</span>
                             </div>
                         </div>
                         <div className="tv-info-item">
@@ -131,7 +142,7 @@ export default function TopicViewModal({
                             <Info size={16} />
                             <div className="tv-info-content">
                                 <label>Направление</label>
-                                <span>{topic.directionTitle || "Не указано"}</span>
+                                <span>{topic.direction?.titleRu || `Направление #${topic.directionId}`}</span>
                             </div>
                         </div>
                     </div>
@@ -247,19 +258,15 @@ export default function TopicViewModal({
                                 <h3>Название темы</h3>
                             </div>
                             <div className="tv-tabs-mini">
-                                {["kk", "ru", "en"].map((lang) => (
-                                    <button
-                                        key={lang}
-                                        className={`tv-tab-btn ${titleTab === lang ? "active" : ""}`}
-                                        onClick={() => setTitleTab(lang)}
-                                    >
-                                        {lang.toUpperCase()}
-                                    </button>
-                                ))}
+                                <button className={`tv-tab-btn ${titleTab === "kk" ? "active" : ""}`} onClick={() => setTitleTab("kk")}>KK</button>
+                                <button className={`tv-tab-btn ${titleTab === "ru" ? "active" : ""}`} onClick={() => setTitleTab("ru")}>RU</button>
+                                <button className={`tv-tab-btn ${titleTab === "en" ? "active" : ""}`} onClick={() => setTitleTab("en")}>EN</button>
                             </div>
                         </div>
                         <div className="tv-text-box">
-                            {topic.title?.[titleTab] || <span className="tv-empty-text">Нет данных</span>}
+                            {titleTab === "kk" && (topic.titleKz || <span className="tv-empty-text">Нет данных</span>)}
+                            {titleTab === "ru" && (topic.titleRu || <span className="tv-empty-text">Нет данных</span>)}
+                            {titleTab === "en" && (topic.titleEn || <span className="tv-empty-text">Нет данных</span>)}
                         </div>
                     </div>
 
@@ -270,20 +277,9 @@ export default function TopicViewModal({
                                 <Info size={18} />
                                 <h3>Описание и задачи</h3>
                             </div>
-                            <div className="tv-tabs-mini">
-                                {["kk", "ru", "en"].map((lang) => (
-                                    <button
-                                        key={lang}
-                                        className={`tv-tab-btn ${descTab === lang ? "active" : ""}`}
-                                        onClick={() => setDescTab(lang)}
-                                    >
-                                        {lang.toUpperCase()}
-                                    </button>
-                                ))}
-                            </div>
                         </div>
                         <div className="tv-text-box desc-area">
-                            {topic.description?.[descTab] || <span className="tv-empty-text">Описание отсутствует</span>}
+                            {topic.description || <span className="tv-empty-text">Описание отсутствует</span>}
                         </div>
                     </div>
                 </div>

@@ -4,10 +4,10 @@ import "./CreateTopicModal.css";
 
 export default function CreateTopicModal({ open, onClose, onCreate, directions = [] }) {
     const [form, setForm] = useState({
-        direction: "",
+        directionId: "",
         title: { kk: "", ru: "", en: "" },
         description: { kk: "", ru: "", en: "" },
-        workType: "",
+        workTypeId: "",
         studentCount: "1",
     });
 
@@ -16,10 +16,10 @@ export default function CreateTopicModal({ open, onClose, onCreate, directions =
     useEffect(() => {
         if (!open) {
             setForm({
-                direction: "",
+                directionId: "",
                 title: { kk: "", ru: "", en: "" },
                 description: { kk: "", ru: "", en: "" },
-                workType: "",
+                workTypeId: "",
                 studentCount: "1",
             });
             setTouched(false);
@@ -38,10 +38,10 @@ export default function CreateTopicModal({ open, onClose, onCreate, directions =
     };
 
     const valid = () => {
-        const hasDirection = form.direction.trim() !== "";
+        const hasDirection = form.directionId.toString().trim() !== "";
         const hasTitle = (form.title.kk + form.title.ru + form.title.en).trim() !== "";
         const hasDesc = (form.description.kk + form.description.ru + form.description.en).trim() !== "";
-        const hasWorkType = form.workType.trim() !== "";
+        const hasWorkType = form.workTypeId.toString().trim() !== "";
         return hasDirection && hasTitle && hasDesc && hasWorkType;
     };
 
@@ -50,20 +50,13 @@ export default function CreateTopicModal({ open, onClose, onCreate, directions =
         if (!valid()) return;
 
         const topic = {
-            title: {
-                kk: form.title.kk.trim(),
-                ru: form.title.ru.trim(),
-                en: form.title.en.trim(),
-            },
-            description: {
-                kk: form.description.kk.trim(),
-                ru: form.description.ru.trim(),
-                en: form.description.en.trim(),
-            },
-            direction: form.direction,
-            workType: form.workType,
-            studentCount: parseInt(form.studentCount, 10) || 1,
-            createdAt: new Date().toISOString(),
+            titleRu: form.title.ru.trim(),
+            titleKz: form.title.kk.trim(),
+            titleEn: form.title.en.trim(),
+            description: (form.description.ru || form.description.kk || form.description.en).trim(),
+            directionId: Number(form.directionId),
+            workTypeId: Number(form.workTypeId),
+            maxParticipants: parseInt(form.studentCount, 10) || 1,
         };
 
         onCreate?.(topic);
@@ -91,13 +84,13 @@ export default function CreateTopicModal({ open, onClose, onCreate, directions =
                             <h3>Направление</h3>
                         </div>
                         <select
-                            className={`ctm-select ${touched && !form.direction ? "invalid" : ""}`}
-                            value={form.direction}
-                            onChange={e => updateField("direction", e.target.value)}
+                            className={`ctm-select ${touched && !form.directionId ? "invalid" : ""}`}
+                            value={form.directionId}
+                            onChange={e => updateField("directionId", e.target.value)}
                         >
                             <option value="">Выберите направление из списка...</option>
-                            {directions.map((d, idx) => (
-                                <option key={idx} value={d}>{d}</option>
+                            {directions.map((d) => (
+                                <option key={d.id} value={d.id}>{d.titleRu || d.titleKz || d.titleEn}</option>
                             ))}
                         </select>
                     </div>
@@ -187,14 +180,15 @@ export default function CreateTopicModal({ open, onClose, onCreate, directions =
                                 <h3>Тип работы</h3>
                             </div>
                             <select
-                                className={`ctm-select ${touched && !form.workType ? "invalid" : ""}`}
-                                value={form.workType}
-                                onChange={e => updateField("workType", e.target.value)}
+                                className={`ctm-select ${touched && !form.workTypeId ? "invalid" : ""}`}
+                                value={form.workTypeId}
+                                onChange={e => updateField("workTypeId", e.target.value)}
                             >
                                 <option value="">Выберите...</option>
-                                <option value="diploma">Дипломная работа</option>
-                                <option value="course">Курсовая работа</option>
-                                <option value="research">НИРС</option>
+                                <option value="0">Курсовая работа</option>
+                                <option value="1">Дипломная работа/Бакалавриат</option>
+                                <option value="2">Магистерская диссертация</option>
+                                <option value="3">Докторская диссертация</option>
                             </select>
                         </div>
 

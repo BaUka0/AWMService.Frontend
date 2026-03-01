@@ -3,47 +3,54 @@ import { X, Edit3, Globe, AlignLeft } from "lucide-react";
 import "./DirectionEditModal.css";
 
 export default function DirectionEditModal({ direction, onClose, onSave }) {
-    const normalizeLangObj = (obj) => ({
-        kk: obj?.kk ?? "",
-        ru: obj?.ru ?? "",
-        en: obj?.en ?? "",
-    });
+    const getDirectionStatus = (dir) => {
+        if (dir?.isApproved) return "approved";
+        if (dir?.isPending) return "pending";
+        if (dir?.isRejected) return "rejected";
+        return "draft";
+    };
 
     const [form, setForm] = useState({
         id: direction?.id ?? Date.now().toString(),
-        title: normalizeLangObj(direction?.title),
-        description: normalizeLangObj(direction?.description),
-        status: direction?.status ?? "draft",
+        departmentId: direction?.departmentId ?? 1,
+        supervisorId: direction?.supervisorId ?? 0,
+        academicYearId: direction?.academicYearId ?? 1,
+        titleRu: direction?.titleRu ?? "",
+        titleKz: direction?.titleKz ?? "",
+        titleEn: direction?.titleEn ?? "",
+        description: direction?.description ?? "",
+        status: getDirectionStatus(direction),
         createdAt: direction?.createdAt ?? new Date().toISOString(),
-        approvedAt: direction?.approvedAt ?? null,
+        reviewComment: direction?.reviewComment ?? null,
     });
 
     useEffect(() => {
         if (direction) {
             setForm({
                 id: direction.id,
-                title: normalizeLangObj(direction.title),
-                description: normalizeLangObj(direction.description),
-                status: direction.status ?? "draft",
+                departmentId: direction.departmentId ?? 1,
+                supervisorId: direction.supervisorId ?? 0,
+                academicYearId: direction.academicYearId ?? 1,
+                titleRu: direction.titleRu ?? "",
+                titleKz: direction.titleKz ?? "",
+                titleEn: direction.titleEn ?? "",
+                description: direction.description ?? "",
+                status: getDirectionStatus(direction),
                 createdAt: direction.createdAt ?? new Date().toISOString(),
-                approvedAt: direction.approvedAt ?? null,
+                reviewComment: direction.reviewComment ?? null,
             });
         }
     }, [direction]);
 
-    const handleChange = (field, lang, value) => {
+    const handleChange = (field, value) => {
         setForm((prev) => ({
             ...prev,
-            [field]: { ...prev[field], [lang]: value },
+            [field]: value,
         }));
     };
 
     const handleSaveClick = () => {
-        onSave({
-            ...form,
-            title: normalizeLangObj(form.title),
-            description: normalizeLangObj(form.description),
-        });
+        onSave(form);
     };
 
     return (
@@ -71,17 +78,33 @@ export default function DirectionEditModal({ direction, onClose, onSave }) {
                         </div>
 
                         <div className="dem-input-group">
-                            {['kk', 'ru', 'en'].map((lang) => (
-                                <div className="dem-field" key={`title-${lang}`}>
-                                    <div className="dem-lang-tag">{lang.toUpperCase()}</div>
-                                    <input
-                                        className="dem-input"
-                                        value={form.title[lang]}
-                                        onChange={(e) => handleChange("title", lang, e.target.value)}
-                                        placeholder={`Название (${lang.toUpperCase()})...`}
-                                    />
-                                </div>
-                            ))}
+                            <div className="dem-field">
+                                <div className="dem-lang-tag">KK</div>
+                                <input
+                                    className="dem-input"
+                                    value={form.titleKz}
+                                    onChange={(e) => handleChange("titleKz", e.target.value)}
+                                    placeholder={`Название (KK)...`}
+                                />
+                            </div>
+                            <div className="dem-field">
+                                <div className="dem-lang-tag">RU</div>
+                                <input
+                                    className="dem-input"
+                                    value={form.titleRu}
+                                    onChange={(e) => handleChange("titleRu", e.target.value)}
+                                    placeholder={`Название (RU)...`}
+                                />
+                            </div>
+                            <div className="dem-field">
+                                <div className="dem-lang-tag">EN</div>
+                                <input
+                                    className="dem-input"
+                                    value={form.titleEn}
+                                    onChange={(e) => handleChange("titleEn", e.target.value)}
+                                    placeholder={`Название (EN)...`}
+                                />
+                            </div>
                         </div>
                     </div>
 
@@ -93,18 +116,15 @@ export default function DirectionEditModal({ direction, onClose, onSave }) {
                         </div>
 
                         <div className="dem-input-group">
-                            {['kk', 'ru', 'en'].map((lang) => (
-                                <div className="dem-field vertical" key={`desc-${lang}`}>
-                                    <div className="dem-lang-tag">{lang.toUpperCase()}</div>
-                                    <textarea
-                                        className="dem-textarea"
-                                        value={form.description[lang]}
-                                        onChange={(e) => handleChange("description", lang, e.target.value)}
-                                        placeholder={`Описание (${lang.toUpperCase()})...`}
-                                        rows={3}
-                                    />
-                                </div>
-                            ))}
+                            <div className="dem-field vertical">
+                                <textarea
+                                    className="dem-textarea"
+                                    value={form.description}
+                                    onChange={(e) => handleChange("description", e.target.value)}
+                                    placeholder={`Описание...`}
+                                    rows={3}
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>
